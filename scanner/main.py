@@ -7,7 +7,7 @@ import sys
 from datetime import datetime, timedelta
 
 from .data import JST, drop_unclosed, fetch_bars, load_bars_csv
-from .engine import M5, Params, replay
+from .engine import M5, Params, Signal, replay
 from .notify import format_signal, send
 from .parser import ParseError, load_scenarios
 
@@ -32,6 +32,7 @@ def main(argv=None) -> int:
     ap.add_argument("--csv", default="signals.csv")
     ap.add_argument("--check", action="store_true", help="CSVの解釈結果を表示して終了")
     ap.add_argument("--bars-csv", help="ローカルの5分足CSVで全期間リプレイ（検証用。通知なし）")
+    ap.add_argument("--test-notify", action="store_true", help="テスト通知を1通送って終了（市場休場中の経路確認用）")
     ap.add_argument("--dry-run", action="store_true", help="通知・状態保存をしない")
     ap.add_argument("--since", help="この時刻以降の足だけで判定（ISO。無印はJST）")
     ap.add_argument("--state", default=os.environ.get("STATE_PATH", "state/notified.json"))
@@ -46,6 +47,15 @@ def main(argv=None) -> int:
     if a.check:
         print_check(scenarios)
         return 0
+
+    if a.test_notify:
+        sc = scenarios[0]
+        msg = "【テスト通知】\n" + format_signal(Signal(sc, datetime.now(JST), sc.entry))
+        print(msg)
+        if send(msg):
+            return 0
+        print("どの通知先にも送信できませんでした", file=sys.stderr)
+        return 1
 
     p = Params(tol=float(env("TOL") or 0.03), max_dev=float(env("MAX_ENTRY_DEVIATION") or 0.08),
                cooldown_bars=int(env("COOLDOWN_BARS") or 12))
