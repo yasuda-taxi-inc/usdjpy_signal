@@ -6,6 +6,11 @@ on:
     # 実行時間を絞って Actions 分数を節約したい場合は、時を限定する（例: "*/5 13-23,0-2 * * 1-5"）
     - cron: "*/5 * * * 0-5"
   workflow_dispatch:
+    inputs:
+      test_notify:
+        description: "テスト通知を1通送る（判定は行わない）"
+        type: boolean
+        default: false
 
 concurrency:
   group: signal-scan
@@ -19,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -41,7 +46,12 @@ jobs:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
           SIGNAL_SINCE: ${{ vars.SIGNAL_SINCE || steps.since.outputs.since }}
-        run: python3 -m scanner.main --csv signals.csv
+        run: |
+          if [ "${{ inputs.test_notify }}" = "true" ]; then
+            python3 -m scanner.main --csv signals.csv --test-notify
+          else
+            python3 -m scanner.main --csv signals.csv
+          fi
 
       - name: Commit state
         run: |
