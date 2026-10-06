@@ -152,7 +152,7 @@ def load_scenarios(path: str) -> list[Scenario]:
         rd = csv.DictReader(fh)
         header = [h.strip() for h in (rd.fieldnames or [])]
         rd.fieldnames = header
-        c_name = _col(header, "シナリオ")
+        c_name = _col(header, "方向・優先度", "シナリオ")
         c_entry = _col(header, "エントリー")
         c_tp1 = _col(header, "第一利確", "利確1", "TP1")
         c_tp2 = _col(header, "第二利確", "利確2", "TP2")
