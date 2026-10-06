@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 NUM = r"\d+(?:\.\d+)?"
 T = r"[～〜~]"
-TF = r"(?:(?P<tf>M5|M15)\s*(?:で|終値\s*(?:が|で)))?"
+TF = r"(?:(?P<tf>M5|M15)\s*で)?"
 
 
 class ParseError(ValueError):
@@ -83,8 +83,6 @@ ENTRY_RX = re.compile(rf"(?P<px>{NUM})\s*(?:付近|近辺|前後)?\s*で\s*(?P<s
 
 
 def _clause_steps(clause: str) -> list[Step]:
-    if re.search(r"できない|できず|しない|せず|していない|ならない|しなかった", clause):
-        raise ParseError(f"未対応の否定表現を含むため判定できません: 「{clause}」")
     found = []
     for kind, rx in RULES:
         for m in re.finditer(rx, clause):
